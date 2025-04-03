@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Dict, List, Optional, Any
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -22,14 +22,16 @@ class ChatService(BaseService):
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
-    
+
     def add_member(self, chat_id: int, user_id: int, role: Role) -> ChatMember:
         member = ChatMember(chat_id=chat_id, user_id=user_id, role=role)
         self.session.add(member)
         self.session.flush()
         return member
 
-    def update_chat_settings(self, chat_id: int, user_id: int, **settings: Dict[str, Any]) -> Chat:
+    def update_chat_settings(
+        self, chat_id: int, user_id: int, **settings: Dict[str, Any]
+    ) -> Chat:
         self._check_permission(chat_id, user_id, Role.OWNER)
         chat = self.session.query(Chat).where(Chat.id == chat_id).one()
         for key, value in settings.items():

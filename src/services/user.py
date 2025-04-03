@@ -2,7 +2,7 @@ from typing import List
 
 from sqlalchemy import and_, select
 
-from ..models.chat import ChatMember, Chat
+from ..models.chat import Chat, ChatMember
 from ..models.user import User, UserProfilePhoto
 from .base import BaseService
 
@@ -19,10 +19,17 @@ class UserService(BaseService):
             .all()
         )
 
-    def get_user_chats(self, user_id: int, offset: int = 0, limit: int = 100) -> List[Chat]:
-        stmt = select(ChatMember.chat).filter(
+    def get_user_chats(
+        self, user_id: int, offset: int = 0, limit: int = 100
+    ) -> List[Chat]:
+        stmt = (
+            select(ChatMember.chat)
+            .filter(
                 and_(ChatMember.user_id == user_id, ChatMember.deleted_at.is_(None))
-            ).offset(offset).limit(limit)
+            )
+            .offset(offset)
+            .limit(limit)
+        )
         return list(self.session.execute(stmt).scalars().all())
 
     def get_user_by_id(self, user_id: int) -> User:

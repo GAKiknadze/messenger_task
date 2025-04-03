@@ -20,7 +20,11 @@ class MessageService(BaseService):
     ) -> Message:
         try:
             if original_message_id:
-                original = self.session.query(Message).where(Message.id == original_message_id).one()
+                original = (
+                    self.session.query(Message)
+                    .where(Message.id == original_message_id)
+                    .one()
+                )
                 if not original.chat.allow_forwarding:
                     raise PermissionError("Forwarding not allowed in source chat")
 
@@ -37,7 +41,9 @@ class MessageService(BaseService):
             self.session.rollback()
             raise e
 
-    def edit_message_text(self, message_id: int, user_id: int, new_text: str) -> Message:
+    def edit_message_text(
+        self, message_id: int, user_id: int, new_text: str
+    ) -> Message:
         message = self.session.query(Message).where(Message.id == message_id).one()
         if message.sender_id != user_id:
             self._check_permission(message.chat_id, user_id)
@@ -46,7 +52,9 @@ class MessageService(BaseService):
         message.edited_at = datetime.utcnow()
         return message
 
-    def delete_message(self, message_id: int, user_id: int, hard_delete: bool = False) -> Message:
+    def delete_message(
+        self, message_id: int, user_id: int, hard_delete: bool = False
+    ) -> Message:
         message = self.session.query(Message).where(Message.id == message_id).one()
 
         if message.sender_id != user_id:
@@ -72,8 +80,12 @@ class MessageService(BaseService):
             original_message_id=source_message_id,
         )
 
-    def copy_message(self, source_message_id: int, target_chat_id: int, sender_id: int) -> Message:
-        source = self.session.query(Message).where(Message.id == source_message_id).one()
+    def copy_message(
+        self, source_message_id: int, target_chat_id: int, sender_id: int
+    ) -> Message:
+        source = (
+            self.session.query(Message).where(Message.id == source_message_id).one()
+        )
         return self.send_message(
             chat_id=target_chat_id,
             sender_id=sender_id,
