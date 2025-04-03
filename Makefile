@@ -8,3 +8,6 @@ deps-dev:
 format:
 	isort .
 	black .
+
+check:
+	mypy --implicit-optional .

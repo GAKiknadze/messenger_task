@@ -1,3 +1,5 @@
 black
 isort
 mypy
+no_implicit_optional
+sqlalchemy[mypy]
