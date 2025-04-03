@@ -1,3 +1,5 @@
+from typing import List
+
 from sqlalchemy import Boolean, Column, Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
@@ -8,19 +10,21 @@ from .enums import PollType
 class Poll(Base):
     __tablename__ = "polls"
 
-    id = Column(Integer, primary_key=True)
-    question = Column(String(300))
-    type = Column(Enum(PollType))
-    is_closed = Column(Boolean, default=False)
-    is_anonymous = Column(Boolean, default=True)
-    message_id = Column(Integer, ForeignKey("messages.id"))
-    options = relationship("PollOption", cascade="all, delete-orphan")
+    id: int = Column(Integer, primary_key=True)
+    question: str = Column(String(300))
+    type: PollType = Column(Enum(PollType))
+    is_closed: bool = Column(Boolean, default=False)
+    is_anonymous: bool = Column(Boolean, default=True)
+    message_id: int = Column(Integer, ForeignKey("messages.id"))
+    options: List["PollOption"] = relationship(
+        "PollOption", cascade="all, delete-orphan"
+    )
 
 
 class PollOption(Base):
     __tablename__ = "poll_options"
 
-    id = Column(Integer, primary_key=True)
-    poll_id = Column(Integer, ForeignKey("polls.id"))
-    text = Column(String(200))
-    voter_count = Column(Integer, default=0)
+    id: int = Column(Integer, primary_key=True)
+    poll_id: int = Column(Integer, ForeignKey("polls.id"))
+    text: str = Column(String(200))
+    voter_count: int = Column(Integer, default=0)
