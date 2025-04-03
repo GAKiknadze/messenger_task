@@ -5,12 +5,14 @@ from ..models.enums import Role
 
 
 class BaseService:
-    def __init__(self, session: Session):
-        self.session: Session = session
+    session: Session
+
+    def __init__(self, session: Session) -> None:
+        self.session = session
 
     def _check_permission(
         self, chat_id: int, user_id: int, required_role: Role = Role.ADMIN
-    ):
+    ) -> bool:
         member = (
             self.session.query(ChatMember)
             .filter(

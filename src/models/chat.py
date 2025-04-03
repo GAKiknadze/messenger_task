@@ -30,11 +30,11 @@ class Chat(Base):
 
     id: int = Column(Integer, primary_key=True)
     title: str = Column(String(100), nullable=False)
-    description: str = Column(Text)
-    photo_id: str = Column(String(100), ForeignKey("files.id"))
+    description: str | None = Column(Text)
+    photo_id: str | None = Column(String(100), ForeignKey("files.id"))
     allow_forwarding: bool = Column(Boolean, default=True)
     created_at: datetime = Column(DateTime, default=datetime.utcnow)
-    deleted_at: datetime = Column(DateTime)
+    deleted_at: datetime | None = Column(DateTime)
 
     members: List["ChatMember"] = relationship("ChatMember", back_populates="chat")
     messages: List["Message"] = relationship("Message", back_populates="chat")
@@ -42,7 +42,7 @@ class Chat(Base):
     permissions: List["ChatPermissions"] = relationship(
         "ChatPermissions", uselist=False, back_populates="chat"
     )
-    photo: "File" = relationship("File")
+    photo: "File" | None = relationship("File")
 
 
 class ChatPermissions(Base):
@@ -68,7 +68,7 @@ class ChatMember(Base):
     user_id: int = Column(Integer, ForeignKey("users.id"), nullable=False)
     role: Role = Column(Enum(Role), default=Role.MEMBER)
     joined_at: datetime = Column(DateTime, default=datetime.utcnow)
-    deleted_at: datetime = Column(DateTime)
+    deleted_at: datetime | None = Column(DateTime)
     restrictions: Dict[str, Any] = Column(JSON)
 
     chat: "Chat" = relationship("Chat", back_populates="members")

@@ -20,13 +20,13 @@ class Message(Base):
     id: int = Column(Integer, primary_key=True)
     chat_id: int = Column(Integer, ForeignKey("chats.id"), nullable=False)
     sender_id: int = Column(Integer, ForeignKey("users.id"), nullable=False)
-    content: str = Column(Text)
+    content: str | None = Column(Text)
     content_type: ContentType = Column(Enum(ContentType), default=ContentType.TEXT)
     created_at: datetime = Column(DateTime, default=datetime.utcnow)
-    edited_at: datetime = Column(DateTime)
-    deleted_at: datetime = Column(DateTime)
-    original_message_id: int = Column(Integer, ForeignKey("messages.id"))
-    file_id: str = Column(String(100), ForeignKey("files.id"))
+    edited_at: datetime | None = Column(DateTime)
+    deleted_at: datetime | None = Column(DateTime)
+    original_message_id: int | None = Column(Integer, ForeignKey("messages.id"))
+    file_id: str | None = Column(String(100), ForeignKey("files.id"))
     location_data: Dict[str, Any] = Column(JSON)
     venue_data: Dict[str, Any] = Column(JSON)
     contact_data: Dict[str, Any] = Column(JSON)
@@ -34,8 +34,8 @@ class Message(Base):
 
     chat: "Chat" = relationship("Chat", back_populates="messages")
     sender: "User" = relationship("User")
-    forwarded_from: "Message" = relationship("Message", remote_side=[id])
-    file: "File" = relationship("File")
+    forwarded_from: "Message" | None = relationship("Message", remote_side=[id])
+    file: "File" | None = relationship("File")
 
 
 class DeletedMessage(Base):

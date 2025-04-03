@@ -11,7 +11,7 @@ class Poll(Base):
     __tablename__ = "polls"
 
     id: int = Column(Integer, primary_key=True)
-    question: str = Column(String(300))
+    question: str = Column(String(300), nullable=False)
     type: PollType = Column(Enum(PollType))
     is_closed: bool = Column(Boolean, default=False)
     is_anonymous: bool = Column(Boolean, default=True)

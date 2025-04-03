@@ -9,8 +9,8 @@ class File(Base):
     __tablename__ = "files"
 
     id: str = Column(String(100), primary_key=True)
-    file_path: str = Column(String(200))
-    file_size: int = Column(Integer)
-    mime_type: str = Column(String(50))
-    content: bytes = Column(LargeBinary)
+    file_path: str | None = Column(String(200))
+    file_size: int | None = Column(Integer)
+    mime_type: str | None = Column(String(50))
+    content: bytes | None = Column(LargeBinary)
     uploaded_at: datetime = Column(DateTime, default=datetime.utcnow)

@@ -15,7 +15,7 @@ class MediaService(BaseService):
         file_data: bytes,
         mime_type: str,
         file_name: str,
-    ):
+    ) -> Message:
         file_id = f"file_{datetime.now().timestamp()}"
         new_file = File(
             id=file_id, content=file_data, mime_type=mime_type, file_path=file_name
@@ -38,7 +38,7 @@ class MediaService(BaseService):
         image_data: bytes,
         mime_type: str = "image/jpeg",
         file_name: str = "photo.jpg",
-    ):
+    ) -> Message:
         return self._send_media(
             chat_id, sender_id, ContentType.PHOTO, image_data, mime_type, file_name
         )
@@ -50,14 +50,14 @@ class MediaService(BaseService):
         audio_data: bytes,
         mime_type: str = "audio/mpeg",
         file_name: str = "audio.mp3",
-    ):
+    ) -> Message:
         return self._send_media(
             chat_id, sender_id, ContentType.AUDIO, audio_data, mime_type, file_name
         )
 
     def send_location(
         self, chat_id: int, sender_id: int, latitude: float, longitude: float
-    ):
+    ) -> Message:
         message = Message(
             chat_id=chat_id,
             sender_id=sender_id,
@@ -75,7 +75,7 @@ class MediaService(BaseService):
         longitude: float,
         title: str,
         address: str,
-    ):
+    ) -> Message:
         message = Message(
             chat_id=chat_id,
             sender_id=sender_id,
@@ -97,7 +97,7 @@ class MediaService(BaseService):
         phone_number: str,
         first_name: str,
         last_name: str = None,
-    ):
+    ) -> Message:
         message = Message(
             chat_id=chat_id,
             sender_id=sender_id,
@@ -111,5 +111,5 @@ class MediaService(BaseService):
         self.session.add(message)
         return message
 
-    def get_file(self, file_id: str):
+    def get_file(self, file_id: str) -> Message | None:
         return self.session.query(File).get(file_id)

@@ -14,13 +14,13 @@ class MessageService(BaseService):
         self,
         chat_id: int,
         sender_id: int,
-        content: str,
+        content: str | None = None,
         content_type: ContentType = ContentType.TEXT,
         original_message_id: int = None,
-    ):
+    ) -> Message:
         try:
             if original_message_id:
-                original = self.session.query(Message).get(original_message_id)
+                original = self.session.query(Message).where(Message.id == original_message_id).one()
                 if not original.chat.allow_forwarding:
                     raise PermissionError("Forwarding not allowed in source chat")
 
@@ -37,8 +37,8 @@ class MessageService(BaseService):
             self.session.rollback()
             raise e
 
-    def edit_message_text(self, message_id: int, user_id: int, new_text: str):
-        message = self.session.query(Message).get(message_id)
+    def edit_message_text(self, message_id: int, user_id: int, new_text: str) -> Message:
+        message = self.session.query(Message).where(Message.id == message_id).one()
         if message.sender_id != user_id:
             self._check_permission(message.chat_id, user_id)
 
@@ -46,8 +46,8 @@ class MessageService(BaseService):
         message.edited_at = datetime.utcnow()
         return message
 
-    def delete_message(self, message_id: int, user_id: int, hard_delete: bool = False):
-        message = self.session.query(Message).get(message_id)
+    def delete_message(self, message_id: int, user_id: int, hard_delete: bool = False) -> Message:
+        message = self.session.query(Message).where(Message.id == message_id).one()
 
         if message.sender_id != user_id:
             self._check_permission(message.chat_id, user_id)
@@ -64,7 +64,7 @@ class MessageService(BaseService):
 
     def forward_message(
         self, source_message_id: int, target_chat_id: int, sender_id: int
-    ):
+    ) -> Message:
         return self.send_message(
             chat_id=target_chat_id,
             sender_id=sender_id,
@@ -72,8 +72,8 @@ class MessageService(BaseService):
             original_message_id=source_message_id,
         )
 
-    def copy_message(self, source_message_id: int, target_chat_id: int, sender_id: int):
-        source = self.session.query(Message).get(source_message_id)
+    def copy_message(self, source_message_id: int, target_chat_id: int, sender_id: int) -> Message:
+        source = self.session.query(Message).where(Message.id == source_message_id).one()
         return self.send_message(
             chat_id=target_chat_id,
             sender_id=sender_id,
@@ -89,7 +89,7 @@ class MessageService(BaseService):
         question: str,
         options: List[str],
         poll_type: PollType = PollType.REGULAR,
-    ):
+    ) -> Message:
         poll = Poll(
             question=question,
             type=poll_type,
@@ -105,8 +105,8 @@ class MessageService(BaseService):
         self.session.add(message)
         return message
 
-    def stop_poll(self, message_id: int, user_id: int):
-        message = self.session.query(Message).get(message_id)
+    def stop_poll(self, message_id: int, user_id: int) -> Message:
+        message = self.session.query(Message).where(Message.id == message_id).one()
         if message.sender_id != user_id:
             self._check_permission(message.chat_id, user_id)
 

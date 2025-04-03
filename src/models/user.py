@@ -15,8 +15,8 @@ class User(Base):
 
     id: int = Column(Integer, primary_key=True)
     username: str = Column(String(50), unique=True, nullable=False)
-    phone_number: str = Column(String(20))
-    deleted_at: datetime = Column(DateTime)
+    phone_number: str | None = Column(String(20))
+    deleted_at: datetime | None = Column(DateTime)
     profile_photos: List["UserProfilePhoto"] = relationship(
         "UserProfilePhoto", back_populates="user"
     )

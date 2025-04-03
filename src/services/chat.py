@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Any
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -11,7 +11,7 @@ from .base import BaseService
 
 
 class ChatService(BaseService):
-    def create_chat(self, creator_id: int, title: str, description: str = None):
+    def create_chat(self, creator_id: int, title: str, description: str = None) -> Chat:
         try:
             new_chat = Chat(title=title, description=description)
             self.session.add(new_chat)
@@ -22,18 +22,24 @@ class ChatService(BaseService):
         except SQLAlchemyError as e:
             self.session.rollback()
             raise e
+    
+    def add_member(self, chat_id: int, user_id: int, role: Role) -> ChatMember:
+        member = ChatMember(chat_id=chat_id, user_id=user_id, role=role)
+        self.session.add(member)
+        self.session.flush()
+        return member
 
-    def update_chat_settings(self, chat_id: int, user_id: int, **settings):
+    def update_chat_settings(self, chat_id: int, user_id: int, **settings: Dict[str, Any]) -> Chat:
         self._check_permission(chat_id, user_id, Role.OWNER)
-        chat = self.session.query(Chat).get(chat_id)
+        chat = self.session.query(Chat).where(Chat.id == chat_id).one()
         for key, value in settings.items():
             setattr(chat, key, value)
         return chat
 
-    def get_chat(self, chat_id: int):
-        return self.session.query(Chat).get(chat_id)
+    def get_chat(self, chat_id: int) -> Chat:
+        return self.session.query(Chat).where(Chat.id == chat_id).one()
 
-    def get_chat_administrators(self, chat_id: int):
+    def get_chat_administrators(self, chat_id: int) -> List[ChatMember]:
         return (
             self.session.query(ChatMember)
             .filter(
@@ -44,7 +50,9 @@ class ChatService(BaseService):
             .all()
         )
 
-    def set_chat_permissions(self, chat_id: int, user_id: int, permissions: Dict):
+    def set_chat_permissions(
+        self, chat_id: int, user_id: int, permissions: Dict[str, Any]
+    ) -> ChatPermissions:
         self._check_permission(chat_id, user_id, Role.OWNER)
         chat_perms = self.session.query(ChatPermissions).get(
             chat_id
@@ -60,7 +68,7 @@ class ChatService(BaseService):
         creator_id: int,
         expires: Optional[datetime] = None,
         member_limit: int = None,
-    ):
+    ) -> InviteLink:
         link = f"https://chat.example/invite/{uuid.uuid4()}"
         new_link = InviteLink(
             chat_id=chat_id,
@@ -72,13 +80,13 @@ class ChatService(BaseService):
         self.session.add(new_link)
         return new_link
 
-    def revoke_invite_link(self, link_id: int, user_id: int):
-        link = self.session.query(InviteLink).get(link_id)
+    def revoke_invite_link(self, link_id: int, user_id: int) -> InviteLink:
+        link = self.session.query(InviteLink).where(InviteLink.id == link_id).one()
         self._check_permission(link.chat_id, user_id)
         link.is_revoked = True
         return link
 
-    def export_chat_invite_link(self, chat_id: int, user_id: int):
+    def export_chat_invite_link(self, chat_id: int, user_id: int) -> InviteLink | None:
         self._check_permission(chat_id, user_id)
         return (
             self.session.query(InviteLink)
@@ -87,21 +95,25 @@ class ChatService(BaseService):
             .first()
         )
 
-    def ban_chat_member(self, chat_id: int, moderator_id: int, user_id: int):
+    def ban_chat_member(
+        self, chat_id: int, moderator_id: int, user_id: int
+    ) -> ChatMember:
         self._check_permission(chat_id, moderator_id)
         member = self._get_chat_member(chat_id, user_id)
         member.deleted_at = datetime.utcnow()
         return member
 
-    def unban_chat_member(self, chat_id: int, moderator_id: int, user_id: int):
+    def unban_chat_member(
+        self, chat_id: int, moderator_id: int, user_id: int
+    ) -> ChatMember:
         self._check_permission(chat_id, moderator_id)
         member = self._get_chat_member(chat_id, user_id)
         member.deleted_at = None
         return member
 
     def restrict_chat_member(
-        self, chat_id: int, moderator_id: int, user_id: int, permissions: Dict
-    ):
+        self, chat_id: int, moderator_id: int, user_id: int, permissions: Dict[str, Any]
+    ) -> ChatMember:
         self._check_permission(chat_id, moderator_id)
         member = self._get_chat_member(chat_id, user_id)
         member.restrictions = permissions
@@ -109,20 +121,20 @@ class ChatService(BaseService):
 
     def promote_chat_member(
         self, chat_id: int, promoter_id: int, user_id: int, role: Role
-    ):
+    ) -> ChatMember:
         self._check_permission(chat_id, promoter_id, Role.OWNER)
         member = self._get_chat_member(chat_id, user_id)
         member.role = role
         return member
 
-    def leave_chat(self, chat_id: int, user_id: int):
+    def leave_chat(self, chat_id: int, user_id: int) -> ChatMember:
         member = self._get_chat_member(chat_id, user_id)
         member.deleted_at = datetime.utcnow()
         return member
 
-    def _get_chat_member(self, chat_id: int, user_id: int):
+    def _get_chat_member(self, chat_id: int, user_id: int) -> ChatMember:
         return (
             self.session.query(ChatMember)
             .filter(ChatMember.chat_id == chat_id, ChatMember.user_id == user_id)
-            .first()
+            .one()
         )
